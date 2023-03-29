@@ -1,0 +1,4 @@
+github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
+github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/taigrr/log-socket v1.0.1 h1:cxdxYEB+JbBQrs5/kKJzTIjs8z5SWp99pKyJcFoywc8=
+github.com/taigrr/log-socket v1.0.1/go.mod h1:km7dTI5T0ncBCr1xsUwdNXi6UWQptdDZuwhvKntLSN4=

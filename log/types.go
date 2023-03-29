@@ -1,7 +1,7 @@
 package log
 
-func Default() *logger {
-	l := logger{SubLoggers: []levelLogger{}}
+func Default() *Logger {
+	l := Logger{SubLoggers: []levelLogger{}}
 	return &l
 }
 
@@ -9,7 +9,7 @@ func EnrichLogger(weak stdLogger) gapLogger {
 	return gapLogger{subLogger: weak}
 }
 
-type logger struct {
+type Logger struct {
 	SubLoggers []levelLogger
 }
 type gapLogger struct {
