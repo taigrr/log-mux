@@ -3,7 +3,9 @@
 This repo was created so that you can easily mux (combine) the features of
 multiple logging packages while still using the best features of each.
 Create a logging mux by calling Default() and appending your loggers into the
-SubLoggers child property. For example:
+SubLoggers child property.
+
+For example:
 
 ```golang
 package main
