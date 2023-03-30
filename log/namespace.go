@@ -20,12 +20,15 @@ func GetNSLogger(namespace string) (*Logger, error) {
 	defer mu.RUnlock()
 	if l, ok := ns[namespace]; ok {
 		return l, nil
+	} else {
+		ns[namespace] = Default()
 	}
-	return Default(), ErrNotExist
+	return ns[namespace], ErrNotExist
 }
 
-func SetNSLogger(namespace string, logger *Logger) {
+func SetNSLogger(namespace string, logger Logger) {
 	mu.Lock()
 	defer mu.Unlock()
-	ns[namespace] = logger
+	l := ns[namespace]
+	l.SubLoggers = logger.SubLoggers
 }
