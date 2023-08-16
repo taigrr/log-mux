@@ -1,6 +1,6 @@
 module github.com/taigrr/log-mux
 
-go 1.20
+go 1.21
 
 require github.com/taigrr/log-socket v1.0.1
 
