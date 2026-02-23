@@ -1,62 +1,63 @@
 # log-mux
 
-This repo was created so that you can easily mux (combine) the features of
-multiple logging packages while still using the best features of each.
-Create a logging mux by calling Default() and appending your loggers into the
-SubLoggers child property.
+A Go logging multiplexer that fans out log calls to multiple backends simultaneously.
 
-For example:
+## Installation
 
-```golang
+```bash
+go get github.com/taigrr/log-mux
+```
+
+## Usage
+
+```go
 package main
 
 import (
-        "flag"
-        "log"
-        "net/http"
-        "time"
-
-        "github.com/taigrr/log-socket/browser"
-        ls "github.com/taigrr/log-socket/log"
-        "github.com/taigrr/log-socket/ws"
-
-        mlog "github.com/taigrr/log-mux/log"
+    "log"
+    mlog "github.com/taigrr/log-mux/log"
 )
 
-var addr = flag.String("addr", "0.0.0.0:8080", "http service address")
-
-func generateLogs(l mlog.Logger) {
-        for {
-                l.Info("This is an info log!")
-                l.Trace("This is a trace log!")
-                l.Debug("This is a debug log!")
-                l.Warn("This is a warn log!")
-                l.Error("This is an error log!")
-                time.Sleep(2 * time.Second)
-        }
-}
-
 func main() {
-        defer ls.Flush()
-        flag.Parse()
-        http.HandleFunc("/ws", ws.LogSocketHandler)
-        http.HandleFunc("/", browser.LogSocketViewHandler)
+    l := mlog.Default()
 
-        l := mlog.Default()
-        stdLogger := log.Default()
-        lsLogger := ls.Default()
-        l.SubLoggers = append(l.SubLoggers, mlog.EnrichLogger(stdLogger), lsLogger)
+    // Wrap the standard library logger (adds level methods like Info, Warn, etc.)
+    stdLogger := mlog.EnrichLogger(log.Default())
+    l.SubLoggers = append(l.SubLoggers, stdLogger)
 
-        go generateLogs(*l)
-        l.Fatal(http.ListenAndServe(*addr, nil))
+    // Add any LevelLogger implementation
+    // l.SubLoggers = append(l.SubLoggers, myCustomLogger)
+
+    l.Info("this goes to all sub-loggers")
+    l.Warn("so does this")
 }
 ```
 
-The above code sample shows how you can log to both log-socket (a logging
-library which allows printing json logs over a websocket) and the standard
-log libary, which doesn't have calls like Warn() or Info().
+### Namespaced Loggers
 
-Calls to `Panic()` or `Fatal()` (as well as their `ln` and `f` variants call
-out to the embedded panic/fatal methods, and thus may result in only one logger
-receiving the call. Calls are made in the order the Subloggers are added to the
-mux logger.
+```go
+// Get or create a namespaced logger
+logger, err := mlog.GetNSLogger("http")
+if err == mlog.ErrNotExist {
+    // First access — logger was just created with no sub-loggers
+}
+
+// Configure it
+mlog.SetNSLogger("http", mlog.Logger{
+    SubLoggers: []mlog.LevelLogger{mlog.EnrichLogger(log.Default())},
+})
+```
+
+### Custom Loggers
+
+Any type implementing `LevelLogger` can be added as a sub-logger. For loggers that only implement the standard `Print`/`Fatal`/`Panic` methods, use `EnrichLogger` to promote them to `LevelLogger`.
+
+## Log Levels
+
+All standard levels are supported: `Trace`, `Debug`, `Info`, `Notice`, `Warn`, `Error`, `Panic`, `Fatal`, plus `Print` variants. Each level has plain, formatted (`f`), and newline (`ln`) variants.
+
+> **Note:** `Panic` and `Fatal` calls may only reach the first sub-logger, since the standard library's implementations call `panic()`/`os.Exit()` immediately.
+
+## License
+
+See [LICENSE](LICENSE).

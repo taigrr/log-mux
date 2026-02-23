@@ -35,6 +35,13 @@ func (l Logger) Debugf(format string, args ...interface{}) {
 	}
 }
 
+// Debugln prints out logs on debug level with newline
+func (l Logger) Debugln(args ...interface{}) {
+	for _, sl := range l.SubLoggers {
+		sl.Debugln(args...)
+	}
+}
+
 // Info prints out logs on info level
 func (l Logger) Info(args ...interface{}) {
 	for _, sl := range l.SubLoggers {

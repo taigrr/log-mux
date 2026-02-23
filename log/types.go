@@ -1,22 +1,28 @@
 package log
 
+// Default returns a new Logger with no sub-loggers.
 func Default() *Logger {
-	l := Logger{SubLoggers: []levelLogger{}}
-	return &l
+	return &Logger{SubLoggers: []LevelLogger{}}
 }
 
-func EnrichLogger(weak stdLogger) gapLogger {
+// EnrichLogger wraps a StdLogger (such as the standard library's log.Logger)
+// to satisfy the LevelLogger interface by mapping all level methods to the
+// basic Print/Println/Printf methods.
+func EnrichLogger(weak StdLogger) LevelLogger {
 	return gapLogger{subLogger: weak}
 }
 
+// Logger multiplexes log calls to multiple sub-loggers.
 type Logger struct {
-	SubLoggers []levelLogger
-}
-type gapLogger struct {
-	subLogger stdLogger
+	SubLoggers []LevelLogger
 }
 
-type stdLogger interface {
+type gapLogger struct {
+	subLogger StdLogger
+}
+
+// StdLogger is the interface satisfied by the standard library's log.Logger.
+type StdLogger interface {
 	Println(v ...any)
 	Printf(format string, v ...any)
 	Print(v ...any)
@@ -27,9 +33,12 @@ type stdLogger interface {
 	Fatalf(format string, v ...any)
 	Fatalln(v ...any)
 }
-type levelLogger interface {
+
+// LevelLogger is the interface that level-aware loggers must implement.
+type LevelLogger interface {
 	Debug(v ...any)
 	Debugf(format string, v ...any)
+	Debugln(v ...any)
 	Error(v ...any)
 	Errorf(format string, v ...any)
 	Errorln(v ...any)
