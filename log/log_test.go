@@ -68,6 +68,25 @@ func TestMultiplexing(t *testing.T) {
 	if !strings.Contains(mock2.output(), "warning!") {
 		t.Fatal("mock2 missing output")
 	}
+
+	// Verify reset clears output
+	mock1.reset()
+	mock2.reset()
+	if mock1.output() != "" {
+		t.Fatal("mock1 not cleared after reset")
+	}
+	if mock2.output() != "" {
+		t.Fatal("mock2 not cleared after reset")
+	}
+
+	// Verify logging still works after reset
+	l.Info("after-reset")
+	if !strings.Contains(mock1.output(), "after-reset") {
+		t.Fatal("mock1 missing output after reset")
+	}
+	if !strings.Contains(mock2.output(), "after-reset") {
+		t.Fatal("mock2 missing output after reset")
+	}
 }
 
 func TestAllLevels(t *testing.T) {
