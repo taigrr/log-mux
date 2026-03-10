@@ -1,3 +1,4 @@
 *.exe
 *.test
 *.out
+_example/log-mux-demo
