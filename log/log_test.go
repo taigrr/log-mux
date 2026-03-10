@@ -20,12 +20,6 @@ func (m *mockLogger) output() string {
 	return m.buf.String()
 }
 
-func (m *mockLogger) reset() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.buf.Reset()
-}
-
 func newMockStdLogger() (*log.Logger, *mockLogger) {
 	m := &mockLogger{}
 	return log.New(&m.buf, "", 0), m

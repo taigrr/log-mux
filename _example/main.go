@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/taigrr/log-socket/browser"
-	ls "github.com/taigrr/log-socket/log"
-	"github.com/taigrr/log-socket/ws"
+	"github.com/taigrr/log-socket/v2/browser"
+	ls "github.com/taigrr/log-socket/v2/log"
+	"github.com/taigrr/log-socket/v2/ws"
 
 	mlog "github.com/taigrr/log-mux/log"
 )
@@ -34,8 +34,13 @@ func main() {
 
 	l := mlog.Default()
 	stdLogger := log.Default()
+	// NOTE: log-socket/v2 must have the full LevelLogger interface
+	// (Debugln, Infoln, etc.) for this to compile. Use the
+	// cd/logsocket-parity branch of log-socket.
 	lsLogger := ls.Default()
-	l.SubLoggers = append(l.SubLoggers, mlog.EnrichLogger(stdLogger), lsLogger)
+	_ = lsLogger // uncomment below once log-socket v2 has full parity
+	l.SubLoggers = append(l.SubLoggers, mlog.EnrichLogger(stdLogger))
+	// l.SubLoggers = append(l.SubLoggers, lsLogger)
 
 	go generateLogs(*l)
 	l.Fatal(http.ListenAndServe(*addr, nil))
