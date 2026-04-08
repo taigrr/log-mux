@@ -1,5 +1,7 @@
 package log
 
+import "sync"
+
 // Default returns a new Logger with no sub-loggers.
 func Default() *Logger {
 	return &Logger{SubLoggers: []LevelLogger{}}
@@ -14,7 +16,49 @@ func EnrichLogger(weak StdLogger) LevelLogger {
 
 // Logger multiplexes log calls to multiple sub-loggers.
 type Logger struct {
+	mu         sync.RWMutex
 	SubLoggers []LevelLogger
+}
+
+// AddSubLogger appends a sub-logger in a thread-safe manner.
+func (l *Logger) AddSubLogger(sl LevelLogger) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.SubLoggers = append(l.SubLoggers, sl)
+}
+
+// RemoveSubLogger removes the first occurrence of the given sub-logger.
+// It returns true if the sub-logger was found and removed.
+func (l *Logger) RemoveSubLogger(sl LevelLogger) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for i, existing := range l.SubLoggers {
+		if existing == sl {
+			l.SubLoggers = append(l.SubLoggers[:i], l.SubLoggers[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
+// Len returns the number of registered sub-loggers.
+func (l *Logger) Len() int {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return len(l.SubLoggers)
+}
+
+// Write implements io.Writer by delegating to Print on each sub-logger.
+// This allows a Logger to be used as the output for the standard library's
+// log.Logger or as an http.Server.ErrorLog writer.
+func (l *Logger) Write(p []byte) (int, error) {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	msg := string(p)
+	for _, sl := range l.SubLoggers {
+		sl.Print(msg)
+	}
+	return len(p), nil
 }
 
 type gapLogger struct {
