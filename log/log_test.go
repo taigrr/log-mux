@@ -177,6 +177,43 @@ func TestSetNSLogger(t *testing.T) {
 	}
 }
 
+func TestSetNSLoggerReplacesExistingLoggerConfig(t *testing.T) {
+	mu.Lock()
+	ns = make(map[string]*Logger)
+	mu.Unlock()
+
+	l, err := GetNSLogger("replace")
+	if err != ErrNotExist {
+		t.Fatalf("expected ErrNotExist on first lookup, got: %v", err)
+	}
+
+	stdLog1, mock1 := newMockStdLogger()
+	stdLog2, mock2 := newMockStdLogger()
+	SetNSLogger("replace", Logger{SubLoggers: []LevelLogger{EnrichLogger(stdLog1)}})
+	firstPtr := l
+
+	l, err = GetNSLogger("replace")
+	if err != nil {
+		t.Fatalf("expected nil error after SetNSLogger, got: %v", err)
+	}
+	if l != firstPtr {
+		t.Fatal("expected SetNSLogger to update the existing namespace logger in place")
+	}
+	l.Info("first")
+	if !strings.Contains(mock1.output(), "first") {
+		t.Fatalf("expected first replacement logger to receive output, got: %q", mock1.output())
+	}
+
+	SetNSLogger("replace", Logger{SubLoggers: []LevelLogger{EnrichLogger(stdLog2)}})
+	l.Info("second")
+	if strings.Contains(mock1.output(), "second") {
+		t.Fatalf("expected old sub-logger to be replaced, got: %q", mock1.output())
+	}
+	if !strings.Contains(mock2.output(), "second") {
+		t.Fatalf("expected new sub-logger to receive output, got: %q", mock2.output())
+	}
+}
+
 func TestNamespaceConcurrency(t *testing.T) {
 	mu.Lock()
 	ns = make(map[string]*Logger)

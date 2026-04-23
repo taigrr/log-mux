@@ -39,11 +39,16 @@ func GetNSLogger(namespace string) (*Logger, error) {
 // SetNSLogger sets the sub-loggers for the given namespace.
 // If the namespace does not exist, it is created.
 func SetNSLogger(namespace string, logger Logger) {
+	subLoggers := append([]LevelLogger(nil), logger.SubLoggers...)
+
 	mu.Lock()
 	defer mu.Unlock()
 	if l, ok := ns[namespace]; ok {
-		l.SubLoggers = logger.SubLoggers
-	} else {
-		ns[namespace] = &logger
+		l.mu.Lock()
+		defer l.mu.Unlock()
+		l.SubLoggers = subLoggers
+		return
 	}
+	logger.SubLoggers = subLoggers
+	ns[namespace] = &logger
 }
