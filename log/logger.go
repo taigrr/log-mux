@@ -2,8 +2,9 @@ package log
 
 // Trace prints out logs on trace level
 func (l *Logger) Trace(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Trace(args...)
 	}
@@ -11,8 +12,9 @@ func (l *Logger) Trace(args ...any) {
 
 // Tracef is a formatted print for Trace
 func (l *Logger) Tracef(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Tracef(format, args...)
 	}
@@ -20,8 +22,9 @@ func (l *Logger) Tracef(format string, args ...any) {
 
 // Traceln prints out logs on trace level with newline
 func (l *Logger) Traceln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Traceln(args...)
 	}
@@ -29,8 +32,9 @@ func (l *Logger) Traceln(args ...any) {
 
 // Debug prints out logs on debug level
 func (l *Logger) Debug(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Debug(args...)
 	}
@@ -38,8 +42,9 @@ func (l *Logger) Debug(args ...any) {
 
 // Debugf is a formatted print for Debug
 func (l *Logger) Debugf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Debugf(format, args...)
 	}
@@ -47,8 +52,9 @@ func (l *Logger) Debugf(format string, args ...any) {
 
 // Debugln prints out logs on debug level with newline
 func (l *Logger) Debugln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Debugln(args...)
 	}
@@ -56,8 +62,9 @@ func (l *Logger) Debugln(args ...any) {
 
 // Info prints out logs on info level
 func (l *Logger) Info(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Info(args...)
 	}
@@ -65,8 +72,9 @@ func (l *Logger) Info(args ...any) {
 
 // Infof is a formatted print for Info
 func (l *Logger) Infof(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Infof(format, args...)
 	}
@@ -74,8 +82,9 @@ func (l *Logger) Infof(format string, args ...any) {
 
 // Infoln prints out logs on info level with newline
 func (l *Logger) Infoln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Infoln(args...)
 	}
@@ -83,8 +92,9 @@ func (l *Logger) Infoln(args ...any) {
 
 // Notice prints out logs on notice level
 func (l *Logger) Notice(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Notice(args...)
 	}
@@ -92,8 +102,9 @@ func (l *Logger) Notice(args ...any) {
 
 // Noticef is a formatted print for Notice
 func (l *Logger) Noticef(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Noticef(format, args...)
 	}
@@ -101,8 +112,9 @@ func (l *Logger) Noticef(format string, args ...any) {
 
 // Noticeln prints out logs on notice level with newline
 func (l *Logger) Noticeln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Noticeln(args...)
 	}
@@ -110,8 +122,9 @@ func (l *Logger) Noticeln(args ...any) {
 
 // Warn prints out logs on warn level
 func (l *Logger) Warn(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Warn(args...)
 	}
@@ -119,8 +132,9 @@ func (l *Logger) Warn(args ...any) {
 
 // Warnf is a formatted print for Warn
 func (l *Logger) Warnf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Warnf(format, args...)
 	}
@@ -128,8 +142,9 @@ func (l *Logger) Warnf(format string, args ...any) {
 
 // Warnln prints out logs on warn level with a newline
 func (l *Logger) Warnln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Warnln(args...)
 	}
@@ -137,8 +152,9 @@ func (l *Logger) Warnln(args ...any) {
 
 // Error prints out logs on error level
 func (l *Logger) Error(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Error(args...)
 	}
@@ -146,8 +162,9 @@ func (l *Logger) Error(args ...any) {
 
 // Errorf is a formatted print for Error
 func (l *Logger) Errorf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Errorf(format, args...)
 	}
@@ -155,8 +172,9 @@ func (l *Logger) Errorf(format string, args ...any) {
 
 // Errorln prints out logs on error level with a new line
 func (l *Logger) Errorln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Errorln(args...)
 	}
@@ -164,8 +182,9 @@ func (l *Logger) Errorln(args ...any) {
 
 // Panic prints out logs on panic level
 func (l *Logger) Panic(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Panic(args...)
 	}
@@ -173,8 +192,9 @@ func (l *Logger) Panic(args ...any) {
 
 // Panicf is a formatted print for Panic
 func (l *Logger) Panicf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Panicf(format, args...)
 	}
@@ -182,8 +202,9 @@ func (l *Logger) Panicf(format string, args ...any) {
 
 // Panicln prints out logs on panic level with a newline
 func (l *Logger) Panicln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Panicln(args...)
 	}
@@ -191,8 +212,9 @@ func (l *Logger) Panicln(args ...any) {
 
 // Fatal prints out logs on fatal level
 func (l *Logger) Fatal(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Fatal(args...)
 	}
@@ -200,8 +222,9 @@ func (l *Logger) Fatal(args ...any) {
 
 // Fatalf is a formatted print for Fatal
 func (l *Logger) Fatalf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Fatalf(format, args...)
 	}
@@ -209,8 +232,9 @@ func (l *Logger) Fatalf(format string, args ...any) {
 
 // Fatalln prints fatal level with a new line
 func (l *Logger) Fatalln(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Fatalln(args...)
 	}
@@ -218,8 +242,9 @@ func (l *Logger) Fatalln(args ...any) {
 
 // Print delegates to sub-loggers
 func (l *Logger) Print(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Print(args...)
 	}
@@ -227,8 +252,9 @@ func (l *Logger) Print(args ...any) {
 
 // Printf delegates to sub-loggers
 func (l *Logger) Printf(format string, args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Printf(format, args...)
 	}
@@ -236,8 +262,9 @@ func (l *Logger) Printf(format string, args ...any) {
 
 // Println delegates to sub-loggers
 func (l *Logger) Println(args ...any) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
+	mu := l.ensureMu()
+	mu.RLock()
+	defer mu.RUnlock()
 	for _, sl := range l.SubLoggers {
 		sl.Println(args...)
 	}

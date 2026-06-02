@@ -250,7 +250,7 @@ func TestNamespaceConcurrency(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			GetNSLogger("concurrent")
+			_, _ = GetNSLogger("concurrent")
 		}()
 	}
 	wg.Wait()

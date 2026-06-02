@@ -44,8 +44,9 @@ func SetNSLogger(namespace string, logger Logger) {
 	mu.Lock()
 	defer mu.Unlock()
 	if l, ok := ns[namespace]; ok {
-		l.mu.Lock()
-		defer l.mu.Unlock()
+		loggerMu := l.ensureMu()
+		loggerMu.Lock()
+		defer loggerMu.Unlock()
 		l.SubLoggers = subLoggers
 		return
 	}
