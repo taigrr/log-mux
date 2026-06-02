@@ -214,6 +214,32 @@ func TestSetNSLoggerReplacesExistingLoggerConfig(t *testing.T) {
 	}
 }
 
+func TestSetNSLoggerCopiesSubLoggerSlice(t *testing.T) {
+	mu.Lock()
+	ns = make(map[string]*Logger)
+	mu.Unlock()
+
+	stdLog1, mock1 := newMockStdLogger()
+	stdLog2, mock2 := newMockStdLogger()
+	subLoggers := []LevelLogger{EnrichLogger(stdLog1)}
+
+	SetNSLogger("copy", Logger{SubLoggers: subLoggers})
+	subLoggers[0] = EnrichLogger(stdLog2)
+
+	l, err := GetNSLogger("copy")
+	if err != nil {
+		t.Fatalf("expected nil error after SetNSLogger, got: %v", err)
+	}
+
+	l.Info("copy-test")
+	if !strings.Contains(mock1.output(), "copy-test") {
+		t.Fatalf("expected original sub-logger to receive output, got: %q", mock1.output())
+	}
+	if strings.Contains(mock2.output(), "copy-test") {
+		t.Fatalf("expected mutated caller slice to not affect namespace logger, got: %q", mock2.output())
+	}
+}
+
 func TestNamespaceConcurrency(t *testing.T) {
 	mu.Lock()
 	ns = make(map[string]*Logger)
