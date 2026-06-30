@@ -1,13 +1,17 @@
 package log
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 // Default returns a new Logger with no sub-loggers.
 func Default() *Logger {
-	return &Logger{
-		mu:         &sync.RWMutex{},
+	l := &Logger{
 		SubLoggers: []LevelLogger{},
 	}
+	l.mu.Store(&sync.RWMutex{})
+	return l
 }
 
 // EnrichLogger wraps a StdLogger (such as the standard library's log.Logger)
@@ -19,15 +23,19 @@ func EnrichLogger(weak StdLogger) LevelLogger {
 
 // Logger multiplexes log calls to multiple sub-loggers.
 type Logger struct {
-	mu         *sync.RWMutex
+	mu         atomic.Pointer[sync.RWMutex]
 	SubLoggers []LevelLogger
 }
 
 func (l *Logger) ensureMu() *sync.RWMutex {
-	if l.mu == nil {
-		l.mu = &sync.RWMutex{}
+	if mu := l.mu.Load(); mu != nil {
+		return mu
 	}
-	return l.mu
+	mu := &sync.RWMutex{}
+	if l.mu.CompareAndSwap(nil, mu) {
+		return mu
+	}
+	return l.mu.Load()
 }
 
 // AddSubLogger appends a sub-logger in a thread-safe manner.

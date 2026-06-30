@@ -44,6 +44,29 @@ func TestDefaultLogger(t *testing.T) {
 	}
 }
 
+func TestZeroValueLoggerConcurrentUse(t *testing.T) {
+	var l Logger
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			stdLog, _ := newMockStdLogger()
+			l.AddSubLogger(EnrichLogger(stdLog))
+		}()
+		go func() {
+			defer wg.Done()
+			l.Info("concurrent zero value")
+		}()
+	}
+	wg.Wait()
+
+	if l.Len() != 50 {
+		t.Fatalf("expected 50 sub-loggers, got %d", l.Len())
+	}
+}
+
 func TestEnrichLogger(t *testing.T) {
 	stdLog, mock := newMockStdLogger()
 	enriched := EnrichLogger(stdLog)
