@@ -1,6 +1,10 @@
 package log
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+	"unsafe"
+)
 
 // Default returns a new Logger with no sub-loggers.
 func Default() *Logger {
@@ -10,6 +14,15 @@ func Default() *Logger {
 	}
 }
 
+// Compile-time assertions that *Logger satisfies the interfaces it advertises.
+// Note: the level methods have pointer receivers (required for the internal
+// mutex), so only *Logger — not a Logger value — satisfies LevelLogger. This
+// differs from v1.2.0, where the methods had value receivers.
+var (
+	_ LevelLogger                             = (*Logger)(nil)
+	_ interface{ Write([]byte) (int, error) } = (*Logger)(nil)
+)
+
 // EnrichLogger wraps a StdLogger (such as the standard library's log.Logger)
 // to satisfy the LevelLogger interface by mapping all level methods to the
 // basic Print/Println/Printf methods.
@@ -18,16 +31,27 @@ func EnrichLogger(weak StdLogger) LevelLogger {
 }
 
 // Logger multiplexes log calls to multiple sub-loggers.
+//
+// The mutex is stored as a plain pointer (rather than an atomic.Pointer or an
+// embedded sync.RWMutex) so that Logger remains free of noCopy fields and can
+// still be passed by value, e.g. to SetNSLogger. Lazy initialization of the
+// mutex for zero-value Loggers is made race-free via atomic operations on the
+// pointer field.
 type Logger struct {
 	mu         *sync.RWMutex
 	SubLoggers []LevelLogger
 }
 
 func (l *Logger) ensureMu() *sync.RWMutex {
-	if l.mu == nil {
-		l.mu = &sync.RWMutex{}
+	addr := (*unsafe.Pointer)(unsafe.Pointer(&l.mu))
+	if mu := atomic.LoadPointer(addr); mu != nil {
+		return (*sync.RWMutex)(mu)
 	}
-	return l.mu
+	mu := &sync.RWMutex{}
+	if atomic.CompareAndSwapPointer(addr, nil, unsafe.Pointer(mu)) {
+		return mu
+	}
+	return (*sync.RWMutex)(atomic.LoadPointer(addr))
 }
 
 // AddSubLogger appends a sub-logger in a thread-safe manner.
@@ -39,7 +63,9 @@ func (l *Logger) AddSubLogger(sl LevelLogger) {
 }
 
 // RemoveSubLogger removes the first occurrence of the given sub-logger.
-// It returns true if the sub-logger was found and removed.
+// It returns true if the sub-logger was found and removed. Matching is by
+// equality (==), so sub-loggers must be comparable; passing a sub-logger whose
+// dynamic type is not comparable will panic, per Go interface comparison rules.
 func (l *Logger) RemoveSubLogger(sl LevelLogger) bool {
 	mu := l.ensureMu()
 	mu.Lock()
