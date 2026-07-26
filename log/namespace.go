@@ -38,6 +38,10 @@ func GetNSLogger(namespace string) (*Logger, error) {
 
 // SetNSLogger sets the sub-loggers for the given namespace.
 // If the namespace does not exist, it is created.
+//
+// logger is taken by value and only its SubLoggers slice is read (defensively
+// copied). The caller must not concurrently mutate logger while calling this;
+// pass a freshly constructed Logger or one not shared with other goroutines.
 func SetNSLogger(namespace string, logger Logger) {
 	subLoggers := append([]LevelLogger(nil), logger.SubLoggers...)
 
