@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	mlog "github.com/taigrr/log-mux/log"
+	mlog "github.com/taigrr/log-mux/v2/log"
 )
 
 func main() {

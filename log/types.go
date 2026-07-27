@@ -16,8 +16,8 @@ func Default() *Logger {
 
 // Compile-time assertions that *Logger satisfies the interfaces it advertises.
 // Note: the level methods have pointer receivers (required for the internal
-// mutex), so only *Logger — not a Logger value — satisfies LevelLogger. This
-// differs from v1.2.0, where the methods had value receivers.
+// mutex), so only *Logger — not a Logger value — satisfies LevelLogger. In
+// v1.x the methods had value receivers; this changed in v2.0.0.
 var (
 	_ LevelLogger                             = (*Logger)(nil)
 	_ interface{ Write([]byte) (int, error) } = (*Logger)(nil)

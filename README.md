@@ -5,7 +5,7 @@ A Go logging multiplexer that fans out log calls to multiple backends simultaneo
 ## Installation
 
 ```bash
-go get github.com/taigrr/log-mux
+go get github.com/taigrr/log-mux/v2
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ import (
     "log"
     "os"
 
-    mlog "github.com/taigrr/log-mux/log"
+    mlog "github.com/taigrr/log-mux/v2/log"
 )
 
 func main() {
@@ -89,6 +89,14 @@ All standard levels are supported: `Trace`, `Debug`, `Info`, `Notice`, `Warn`, `
 ## Thread Safety
 
 All logging methods and sub-logger management (`AddSubLogger`, `RemoveSubLogger`, `Len`) are safe for concurrent use from multiple goroutines.
+
+## Migrating from v1
+
+v2 uses the `/v2` module path, so update your import to
+`github.com/taigrr/log-mux/v2/log`. The logging methods now have pointer
+receivers, so use `*Logger` (e.g. the value returned by `Default()`) wherever a
+`LevelLogger` is expected — a bare `Logger` value no longer satisfies the
+interface.
 
 ## License
 
