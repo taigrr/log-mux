@@ -55,5 +55,8 @@ func SetNSLogger(namespace string, logger Logger) {
 		return
 	}
 	logger.SubLoggers = subLoggers
+	// Reset the mutex so the stored namespace logger gets its own lock rather
+	// than aliasing one the caller may still hold (e.g. from Default()).
+	logger.mu = nil
 	ns[namespace] = &logger
 }

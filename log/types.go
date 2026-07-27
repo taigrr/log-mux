@@ -38,7 +38,10 @@ func EnrichLogger(weak StdLogger) LevelLogger {
 // mutex for zero-value Loggers is made race-free via atomic operations on the
 // pointer field.
 type Logger struct {
-	mu         *sync.RWMutex
+	mu *sync.RWMutex
+	// SubLoggers holds the registered sub-loggers. Use AddSubLogger/
+	// RemoveSubLogger for concurrent-safe management; assigning this field
+	// directly is not synchronized and races with concurrent logging.
 	SubLoggers []LevelLogger
 }
 

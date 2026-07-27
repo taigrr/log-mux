@@ -88,7 +88,9 @@ All standard levels are supported: `Trace`, `Debug`, `Info`, `Notice`, `Warn`, `
 
 ## Thread Safety
 
-All logging methods and sub-logger management (`AddSubLogger`, `RemoveSubLogger`, `Len`) are safe for concurrent use from multiple goroutines.
+All logging methods and the sub-logger management methods (`AddSubLogger`, `RemoveSubLogger`, `Len`) are safe for concurrent use from multiple goroutines. Manage sub-loggers only through these methods — assigning the `SubLoggers` field directly is **not** synchronized and races with concurrent logging.
+
+Sub-loggers are invoked while a read lock is held, so a sub-logger must not call back into `AddSubLogger`/`RemoveSubLogger`/`SetNSLogger` on the same `Logger`, which would deadlock.
 
 ## Migrating from v1
 
