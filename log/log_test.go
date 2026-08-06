@@ -17,6 +17,11 @@ type mockLogger struct {
 	buf bytes.Buffer
 }
 
+type nonComparableLogger struct {
+	LevelLogger
+	labels []string
+}
+
 func (m *mockLogger) output() string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -328,6 +333,39 @@ func TestRemoveSubLogger(t *testing.T) {
 	removed = l.RemoveSubLogger(enriched1)
 	if removed {
 		t.Fatal("expected RemoveSubLogger to return false for missing logger")
+	}
+}
+
+func TestRemoveSubLoggerSkipsNonComparableSubLoggers(t *testing.T) {
+	stdLog1, mock1 := newMockStdLogger()
+	stdLog2, mock2 := newMockStdLogger()
+	incomparable := nonComparableLogger{
+		LevelLogger: EnrichLogger(stdLog1),
+		labels:      []string{"primary"},
+	}
+	comparable := EnrichLogger(stdLog2)
+
+	l := Default()
+	l.AddSubLogger(incomparable)
+	l.AddSubLogger(comparable)
+
+	if !l.RemoveSubLogger(comparable) {
+		t.Fatal("expected comparable sub-logger to be removed")
+	}
+	if l.Len() != 1 {
+		t.Fatalf("expected 1 sub-logger after removal, got %d", l.Len())
+	}
+
+	l.Info("remaining")
+	if !strings.Contains(mock1.output(), "remaining") {
+		t.Fatalf("expected non-comparable sub-logger to remain, got: %q", mock1.output())
+	}
+	if strings.Contains(mock2.output(), "remaining") {
+		t.Fatalf("expected comparable sub-logger to be removed, got: %q", mock2.output())
+	}
+
+	if l.RemoveSubLogger(comparable) {
+		t.Fatal("expected missing comparable sub-logger removal to return false")
 	}
 }
 
