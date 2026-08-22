@@ -1,6 +1,7 @@
 package log
 
 import (
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -67,19 +68,32 @@ func (l *Logger) AddSubLogger(sl LevelLogger) {
 
 // RemoveSubLogger removes the first occurrence of the given sub-logger.
 // It returns true if the sub-logger was found and removed. Matching is by
-// equality (==), so sub-loggers must be comparable; passing a sub-logger whose
-// dynamic type is not comparable will panic, per Go interface comparison rules.
+// equality (==). Sub-loggers whose dynamic type is not comparable are skipped.
 func (l *Logger) RemoveSubLogger(sl LevelLogger) bool {
 	mu := l.ensureMu()
 	mu.Lock()
 	defer mu.Unlock()
 	for i, existing := range l.SubLoggers {
-		if existing == sl {
+		if sameSubLogger(existing, sl) {
 			l.SubLoggers = append(l.SubLoggers[:i], l.SubLoggers[i+1:]...)
 			return true
 		}
 	}
 	return false
+}
+
+func sameSubLogger(existing, target LevelLogger) (eq bool) {
+	if existing == nil || target == nil {
+		return existing == target
+	}
+	if reflect.TypeOf(existing) != reflect.TypeOf(target) {
+		return false
+	}
+	// reflect.Type.Comparable() only reports static comparability; a struct
+	// with an interface field is statically comparable yet can panic at == if
+	// that field holds a non-comparable dynamic value. Recover keeps eq false.
+	defer func() { _ = recover() }()
+	return existing == target
 }
 
 // Len returns the number of registered sub-loggers.
