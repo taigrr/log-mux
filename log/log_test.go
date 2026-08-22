@@ -22,6 +22,12 @@ type nonComparableLogger struct {
 	labels []string
 }
 
+// wrappedLogger is statically comparable (its only field is an interface), yet
+// == panics at runtime when that field holds a non-comparable dynamic value.
+type wrappedLogger struct {
+	LevelLogger
+}
+
 func (m *mockLogger) output() string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -373,6 +379,31 @@ func TestRemoveSubLoggerSkipsNonComparableSubLoggers(t *testing.T) {
 	}
 	if l.Len() != 1 {
 		t.Fatalf("expected non-comparable sub-logger to remain, got %d sub-loggers", l.Len())
+	}
+}
+
+func TestRemoveSubLoggerNoPanicForRuntimeUncomparable(t *testing.T) {
+	stdLog1, _ := newMockStdLogger()
+	stdLog2, mock2 := newMockStdLogger()
+	// Statically comparable struct whose interface field holds a
+	// non-comparable dynamic value: == would panic at runtime.
+	wrapped1 := wrappedLogger{LevelLogger: nonComparableLogger{LevelLogger: EnrichLogger(stdLog1), labels: []string{"a"}}}
+	wrapped2 := wrappedLogger{LevelLogger: nonComparableLogger{LevelLogger: EnrichLogger(stdLog2), labels: []string{"b"}}}
+
+	l := Default()
+	l.AddSubLogger(wrapped1)
+	l.AddSubLogger(wrapped2)
+
+	if l.RemoveSubLogger(wrapped2) {
+		t.Fatal("expected runtime-uncomparable sub-logger removal to return false")
+	}
+	if l.Len() != 2 {
+		t.Fatalf("expected both sub-loggers to remain, got %d", l.Len())
+	}
+
+	l.Info("still-here")
+	if !strings.Contains(mock2.output(), "still-here") {
+		t.Fatalf("expected sub-logger to remain registered, got: %q", mock2.output())
 	}
 }
 

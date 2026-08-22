@@ -82,14 +82,17 @@ func (l *Logger) RemoveSubLogger(sl LevelLogger) bool {
 	return false
 }
 
-func sameSubLogger(existing, target LevelLogger) bool {
+func sameSubLogger(existing, target LevelLogger) (eq bool) {
 	if existing == nil || target == nil {
 		return existing == target
 	}
-	existingType := reflect.TypeOf(existing)
-	if existingType != reflect.TypeOf(target) || !existingType.Comparable() {
+	if reflect.TypeOf(existing) != reflect.TypeOf(target) {
 		return false
 	}
+	// reflect.Type.Comparable() only reports static comparability; a struct
+	// with an interface field is statically comparable yet can panic at == if
+	// that field holds a non-comparable dynamic value. Recover keeps eq false.
+	defer func() { _ = recover() }()
 	return existing == target
 }
 
