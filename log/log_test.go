@@ -367,6 +367,13 @@ func TestRemoveSubLoggerSkipsNonComparableSubLoggers(t *testing.T) {
 	if l.RemoveSubLogger(comparable) {
 		t.Fatal("expected missing comparable sub-logger removal to return false")
 	}
+
+	if l.RemoveSubLogger(incomparable) {
+		t.Fatal("expected non-comparable sub-logger removal to return false")
+	}
+	if l.Len() != 1 {
+		t.Fatalf("expected non-comparable sub-logger to remain, got %d sub-loggers", l.Len())
+	}
 }
 
 func TestWriteInterface(t *testing.T) {
