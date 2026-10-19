@@ -167,6 +167,51 @@ func TestAllLevels(t *testing.T) {
 	}
 }
 
+func TestPanicLevels(t *testing.T) {
+	tests := []struct {
+		name string
+		call func(l *Logger)
+		want string
+	}{
+		{
+			name: "Panic",
+			call: func(l *Logger) { l.Panic("panic message") },
+			want: "panic message",
+		},
+		{
+			name: "Panicf",
+			call: func(l *Logger) { l.Panicf("panic %s", "message") },
+			want: "panic message",
+		},
+		{
+			name: "Panicln",
+			call: func(l *Logger) { l.Panicln("panic message") },
+			want: "panic message",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdLog, mock := newMockStdLogger()
+			l := Default()
+			l.AddSubLogger(EnrichLogger(stdLog))
+
+			func() {
+				defer func() {
+					if recovered := recover(); recovered == nil {
+						t.Fatal("expected panic")
+					}
+				}()
+				tt.call(l)
+			}()
+
+			if !strings.Contains(mock.output(), tt.want) {
+				t.Fatalf("expected panic output %q, got: %q", tt.want, mock.output())
+			}
+		})
+	}
+}
+
 func TestNamespace(t *testing.T) {
 	// Reset namespace state
 	mu.Lock()
