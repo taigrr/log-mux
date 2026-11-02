@@ -506,3 +506,36 @@ func TestConcurrentAddAndLog(t *testing.T) {
 		t.Fatalf("expected 50 sub-loggers, got %d", l.Len())
 	}
 }
+
+func TestRemoveSubLoggerClearsUnusedSlot(t *testing.T) {
+	for _, removeIndex := range []int{0, 1, 2} {
+		t.Run([]string{"first", "middle", "last"}[removeIndex], func(t *testing.T) {
+			logger := Default()
+			var backends []LevelLogger
+			for i := 0; i < 3; i++ {
+				stdLogger, _ := newMockStdLogger()
+				backends = append(backends, EnrichLogger(stdLogger))
+			}
+			logger.SubLoggers = append([]LevelLogger(nil), backends...)
+			// Keep a view of the original backing array to check that removal
+			// releases the reference beyond the new slice length.
+			storage := logger.SubLoggers
+			if !logger.RemoveSubLogger(backends[removeIndex]) {
+				t.Fatal("expected removal to succeed")
+			}
+			if storage[len(backends)-1] != nil {
+				t.Fatal("unused slot retains a sub-logger reference")
+			}
+			remainingIndex := 0
+			for index, backend := range backends {
+				if index == removeIndex {
+					continue
+				}
+				if logger.SubLoggers[remainingIndex] != backend {
+					t.Fatal("removal changed the order of remaining backends")
+				}
+				remainingIndex++
+			}
+		})
+	}
+}
