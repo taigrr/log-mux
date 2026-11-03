@@ -75,7 +75,10 @@ func (l *Logger) RemoveSubLogger(sl LevelLogger) bool {
 	defer mu.Unlock()
 	for i, existing := range l.SubLoggers {
 		if sameSubLogger(existing, sl) {
-			l.SubLoggers = append(l.SubLoggers[:i], l.SubLoggers[i+1:]...)
+			copy(l.SubLoggers[i:], l.SubLoggers[i+1:])
+			last := len(l.SubLoggers) - 1
+			l.SubLoggers[last] = nil // Release the backend from the unused tail.
+			l.SubLoggers = l.SubLoggers[:last]
 			return true
 		}
 	}
