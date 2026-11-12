@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"io"
 	"log"
 	"strings"
 	"sync"
@@ -535,6 +536,84 @@ func TestRemoveSubLoggerClearsUnusedSlot(t *testing.T) {
 					t.Fatal("removal changed the order of remaining backends")
 				}
 				remainingIndex++
+			}
+		})
+	}
+}
+
+// Reconfiguration must preserve handles already held by callers and synchronize
+// with both namespace lookups and logging through those handles.
+func TestConcurrentNamespaceReconfiguration(t *testing.T) {
+	const namespace = "concurrent-reconfiguration"
+	logger, err := GetNSLogger(namespace)
+	if err != nil && err != ErrNotExist {
+		t.Fatal(err)
+	}
+	backend := EnrichLogger(log.New(io.Discard, "", 0))
+	var workers sync.WaitGroup
+	for worker := 0; worker < 8; worker++ {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for iteration := 0; iteration < 100; iteration++ {
+				SetNSLogger(namespace, Logger{SubLoggers: []LevelLogger{backend}})
+				current, lookupErr := GetNSLogger(namespace)
+				if lookupErr != nil {
+					t.Error(lookupErr)
+					return
+				}
+				if current != logger {
+					t.Error("reconfiguration replaced the published logger handle")
+					return
+				}
+				logger.Info("concurrent message")
+				if count := logger.Len(); count != 1 {
+					t.Errorf("expected one backend during replacement, got %d", count)
+					return
+				}
+			}
+		}()
+	}
+	workers.Wait()
+	stdLogger, output := newMockStdLogger()
+	SetNSLogger(namespace, Logger{SubLoggers: []LevelLogger{EnrichLogger(stdLogger)}})
+	logger.Info("final configuration")
+	if got := output.output(); got != "final configuration\n" {
+		t.Fatalf("published handle did not use the final configuration: %q", got)
+	}
+}
+
+func TestPanicReleasesLoggerLock(t *testing.T) {
+	tests := []struct {
+		name string
+		call func(*Logger)
+	}{
+		{"Panic", func(logger *Logger) { logger.Panic("message") }},
+		{"Panicf", func(logger *Logger) { logger.Panicf("%s", "message") }},
+		{"Panicln", func(logger *Logger) { logger.Panicln("message") }},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			logger := Default()
+			logger.AddSubLogger(EnrichLogger(log.New(io.Discard, "", 0)))
+			func() {
+				defer func() {
+					if recover() == nil {
+						t.Error("expected backend panic")
+					}
+				}()
+				test.call(logger)
+			}()
+			// TryLock verifies cleanup without hanging the suite on a leaked read lock.
+			mutex := logger.ensureMu()
+			if !mutex.TryLock() {
+				t.Fatal("panic left the logger locked; backend management would deadlock")
+			}
+			mutex.Unlock()
+			backend := EnrichLogger(log.New(io.Discard, "", 0))
+			logger.AddSubLogger(backend)
+			if !logger.RemoveSubLogger(backend) {
+				t.Fatal("backend management failed after recovering from panic")
 			}
 		})
 	}
